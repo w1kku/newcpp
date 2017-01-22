@@ -1,0 +1,62 @@
+#!/bin/bash
+
+# A shell script for quickly creating a simple, one-file programming project.
+# Useful for competitive programming.
+# Simply edit the variables below if your editor/compiler is different
+# or if you want to use a different programming language.
+
+format=cpp # File extension. It would be convenient if you named this script
+           # new[format]. For example newcpp. You can put it in /usr/local/bin
+           # or any other location in $PATH to make it executable globally.
+
+output=$@             #
+filename=$@.${format} #
+run=run               # Pretty much no point in changing these three.
+
+editor="konsole -e nvim" # Most terminal emulators have the -e flag to
+                         # run a command immediately after launch
+compile="g++ -o ${output} -Wall -g ${filename}"
+template="#include <iostream>
+
+using namespace std;
+
+int main(){
+    
+    return 0;
+}
+"
+
+if [ $# -ne 1 ]; then
+    echo "Project name must be a single word (no spaces)."
+    echo "Usage: new${format} [project_name]"
+    exit
+fi
+
+if [ $@ -eq ${run} ]; then #Check for filename collision
+    echo "Project name cannot be \"${run}\"."
+    echo "Usage: new${format} [project_name]"
+    exit
+fi
+
+mkdir $@
+cd $@
+cat > ${filename} << END
+${template}
+END
+
+# Creates the compile & run script.
+cat > ${run} << EOF
+#!/bin/bash
+if ${compile} ; then # Checks if compilation was successful.
+    echo -e "\e[1;33m Compiled succesfully. Running...\e[0m"
+    if [ \$# -gt 0 ]; then
+        ./${output} <<< "\$@" # Passes arguments (if present) as stdin.
+    else 
+        ./${output} # No arguments passed
+    fi
+fi
+EOF
+
+chmod +x ${run} # Makes the compile & run script executable
+
+${editor} ${filename} # Opens code in the editor
